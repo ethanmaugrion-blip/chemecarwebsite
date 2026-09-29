@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CU Boulder Chem-E-Car</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0B0B0A;
+    --near-black:#141311;
+    --panel:#1B1A17;
+    --gold:#CFB87C;
+    --gold-bright:#E8CE8F;
+    --white:#F6F4EF;
+    --grey:#8A867A;
+    --reaction:#3FD6A3;
+    --danger:#E5674A;
+    --line: rgba(246,244,239,0.14);
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-padding-top: env(safe-area-inset-top, 0px);}
+  html,body{height:100%;}
+  body{
+    background:var(--black);
+    color:var(--white);
+    font-family:'Inter', -apple-system, sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{
+    font-family:'Oswald', 'Inter', sans-serif;
+    font-weight:600;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    line-height:1.05;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; letter-spacing:0.02em; }
+  a{ color:inherit; text-decoration:none; }
+  img,svg{ max-width:100%; display:block; }
+  button{ font-family:inherit; }
+
+  /* ===== ADMIN / EDITABLE ===== */
+  .editable{ outline:none; border-radius:2px; }
+  body.editing .editable{
+    cursor:text;
+    box-shadow:0 0 0 1px rgba(63,214,163,0.35);
+    background:rgba(63,214,163,0.06);
+  }
+  body.editing .editable:focus{
+    box-shadow:0 0 0 2px var(--reaction);
+    background:rgba(63,214,163,0.1);
+  }
+  .admin-only{ display:none; }
+  body.admin-ready .admin-only{ display:inherit; }
+  .edit-only{ display:none; }
+  body.editing .edit-only{ display:inherit; }
+  body.admin-ready .admin-only.flex{ display:flex; }
+  body.admin-ready .admin-only.inline-flex{ display:inline-flex; }
+
+  #adminBar{
+    position:fixed; left:0; right:0; bottom:0; z-index:1000;
+    background:var(--near-black); border-top:1px solid var(--line);
+    padding:14px 20px; padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+    display:none; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  #adminBar.open{ display:flex; }
+  #adminBar .left{ display:flex; align-items:center; gap:10px; }
+  #adminBar .status{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--grey); }
+  #adminBar .status.dot::before{ content:'●'; color:var(--reaction); margin-right:6px; }
+  #adminToggle{
+    position:fixed; right:18px; bottom:18px; z-index:999;
+    width:46px; height:46px; border-radius:50%;
+    background:var(--gold); color:var(--black); border:none; cursor:pointer;
+    font-family:'Oswald',sans-serif; font-size:11px; font-weight:600;
+    box-shadow:0 4px 18px rgba(0,0,0,0.4);
+  }
+  .img-edit-wrap{ position:relative; }
+  .img-edit-btn{
+    position:absolute; top:10px; right:10px; z-index:5;
+    background:rgba(11,11,10,0.82); color:var(--gold-bright);
+    border:1px solid var(--line); padding:8px 12px;
+    font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.06em; text-transform:uppercase;
+    cursor:pointer;
+  }
+  .img-edit-btn:hover{ border-color:var(--gold); }
+  .remove-item{
+    background:transparent; border:1px solid var(--line); color:var(--danger);
+    width:26px; height:26px; cursor:pointer; font-size:14px; line-height:1;
+    align-self:flex-start;
+  }
+  .remove-item:hover{ border-color:var(--danger); }
+  .add-item-btn{
+    margin-top:18px;
+    background:transparent; border:1px dashed var(--line); color:var(--grey);
+    padding:12px 18px; cursor:pointer; width:100%;
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:0.04em; text-transform:uppercase;
+  }
+  .add-item-btn:hover{ border-color:var(--reaction); color:var(--reaction); }
+  .toast{
+    position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(10px);
+    background:var(--gold); color:var(--black); padding:12px 20px;
+    font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.04em; text-transform:uppercase;
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+    z-index:1200; white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.error{ background:var(--danger); color:var(--white); }
+
+  #imgModal{
+    position:fixed; inset:0; z-index:1300;
+    background:rgba(11,11,10,0.78);
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  #imgModal.open{ display:flex; }
+  #imgModal .modal-box{
+    background:var(--near-black); border:1px solid var(--line); max-width:440px; width:100%;
+    padding:28px;
+  }
+  #imgModal h3{ font-size:16px; text-transform:none; color:var(--white); margin-bottom:8px; }
+  #imgModal p{ color:var(--grey); font-size:13px; margin-bottom:16px; }
+  #imgModal input{
+    width:100%; background:var(--black); border:1px solid var(--line); color:var(--white);
+    padding:12px 14px; font-family:'Inter',sans-serif; font-size:14px; margin-bottom:18px;
+  }
+  #imgModal input:focus{ outline:none; border-color:var(--reaction); }
+  #imgModal .modal-actions{ display:flex; justify-content:flex-end; gap:10px; }
+
+  /* ===== NAV ===== */
+  header{
+    position:sticky; top:env(safe-area-inset-top, 0px); z-index:100;
+    background:rgba(11,11,10,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-wrap{
+    max-width:1180px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{ width:34px; height:34px; flex-shrink:0; }
+  .brand-text{
+    font-family:'Oswald', sans-serif; font-weight:600; font-size:16px;
+    letter-spacing:0.06em; text-transform:uppercase; line-height:1.1;
+  }
+  .brand-text span{ display:block; color:var(--gold); font-size:11px; letter-spacing:0.14em; margin-top:2px; }
+  nav.tabs{ display:flex; gap:2px; }
+  nav.tabs button{
+    background:none; border:none; cursor:pointer; color:var(--grey);
+    font-family:'Oswald', sans-serif; font-size:13px; font-weight:500;
+    letter-spacing:0.08em; text-transform:uppercase; padding:10px 16px;
+    border-bottom:2px solid transparent; transition:color .15s ease, border-color .15s ease;
+  }
+  nav.tabs button:hover{ color:var(--white); }
+  nav.tabs button.active{ color:var(--gold-bright); border-bottom-color:var(--gold); }
+  .nav-cta{ display:none; }
+  @media(min-width:720px){ .nav-cta{ display:inline-block; } }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--gold); color:var(--black);
+    font-family:'Oswald', sans-serif; font-weight:600;
+    font-size:13px; letter-spacing:0.06em; text-transform:uppercase;
+    padding:12px 22px; border:1px solid var(--gold); cursor:pointer;
+    transition:background .15s ease, color .15s ease, transform .1s ease;
+  }
+  .btn:hover{ background:var(--gold-bright); }
+  .btn:active{ transform:translateY(1px); }
+  .btn-outline{ background:transparent; color:var(--white); border:1px solid var(--line); }
+  .btn-outline:hover{ border-color:var(--gold); color:var(--gold-bright); background:transparent; }
+  .btn-small{ padding:9px 16px; font-size:12px; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--grey); }
+  .btn-ghost:hover{ color:var(--white); border-color:var(--white); }
+
+  .mobile-toggle{ display:none; background:none; border:1px solid var(--line); color:var(--white); padding:8px 12px; font-family:'Oswald',sans-serif; letter-spacing:.08em; text-transform:uppercase; font-size:12px; }
+  @media(max-width:719px){
+    nav.tabs{ display:none; position:absolute; top:100%; left:0; right:0; background:var(--near-black); flex-direction:column; border-bottom:1px solid var(--line); }
+    nav.tabs.open{ display:flex; }
+    nav.tabs button{ text-align:left; padding:16px 28px; border-bottom:1px solid var(--line); border-left:2px solid transparent; }
+    nav.tabs button.active{ border-left-color:var(--gold); border-bottom-color:var(--line); background:rgba(207,184,124,0.06); }
+    .mobile-toggle{ display:block; }
+  }
+
+  /* ===== SECTIONS ===== */
+  .page{ display:none; }
+  .page.active{ display:block; animation:fade .35s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  section{ padding:80px 28px; }
+  .max{ max-width:1180px; margin:0 auto; }
+
+  .hero{
+    position:relative; min-height:86vh; display:flex; align-items:flex-end;
+    padding:48px 28px 64px; border-bottom:1px solid var(--line); overflow:hidden;
+  }
+  .hero-bg{ position:absolute; inset:0; z-index:0; background-size:cover; background-position:center; }
+  .hero-bg svg{ width:100%; height:100%; }
+  .hero-scrim{
+    position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(180deg, rgba(11,11,10,0.15) 0%, rgba(11,11,10,0.55) 55%, var(--black) 100%);
+  }
+  .hero-content{ position:relative; z-index:2; max-width:1180px; margin:0 auto; width:100%; }
+  .eyebrow-row{ display:flex; align-items:center; gap:10px; margin-bottom:22px; color:var(--gold); }
+  .eyebrow-row .dot{ width:7px; height:7px; background:var(--reaction); border-radius:50%; box-shadow:0 0 8px var(--reaction); }
+  .eyebrow-row span{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.12em; color:var(--grey); }
+  .hero h1{ font-size:clamp(42px, 9vw, 108px); color:var(--white); max-width:14ch; }
+  .hero h1 em{ font-style:normal; color:var(--gold); }
+  .hero-sub{ margin-top:22px; max-width:52ch; font-size:17px; color:#C9C6BB; }
+  .hero-actions{ margin-top:36px; display:flex; gap:14px; flex-wrap:wrap; }
+
+  .banner{ background:var(--panel); border-bottom:1px solid var(--line); padding:22px 28px; }
+  .banner-row{
+    max-width:1180px; margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    font-family:'Oswald', sans-serif; font-size:14px; letter-spacing:0.04em; text-transform:uppercase;
+    color:var(--gold-bright);
+  }
+  .banner-row .sep{ color:var(--line); }
+  .banner-row strong{ color:var(--white); font-weight:500; }
+
+  .section-head{ margin-bottom:44px; }
+  .section-head .kicker{
+    display:block; font-family:'JetBrains Mono', monospace; font-size:12px;
+    letter-spacing:0.14em; color:var(--reaction); margin-bottom:14px;
+  }
+  .section-head h2{ font-size:clamp(28px, 4vw, 44px); }
+  .section-head p{ margin-top:16px; max-width:60ch; color:var(--grey); font-size:16px; }
+
+  .grid-3{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .grid-3 > div{ background:var(--black); padding:32px 28px; position:relative; }
+  @media(max-width:900px){ .grid-3{ grid-template-columns:1fr; } }
+  .grid-3 h3{ font-size:18px; color:var(--white); margin-bottom:10px; text-transform:none; }
+  .grid-3 .num{ font-family:'JetBrains Mono', monospace; color:var(--reaction); font-size:13px; margin-bottom:16px; display:block; }
+  .grid-3 p{ color:var(--grey); font-size:14.5px; }
+
+  .reaction-strip{
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:64px 28px;
+    background:
+      radial-gradient(600px 240px at 15% 30%, rgba(63,214,163,0.07), transparent 60%),
+      radial-gradient(600px 240px at 85% 70%, rgba(207,184,124,0.07), transparent 60%);
+  }
+  .split{ display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }
+  @media(max-width:860px){ .split{ grid-template-columns:1fr; gap:36px; } }
+  .split h2{ font-size:clamp(24px,3.4vw,36px); margin-bottom:18px; }
+  .split p{ color:var(--grey); font-size:15.5px; margin-bottom:14px; }
+  .diagram-box{ border:1px solid var(--line); background:var(--panel); padding:24px; }
+
+  footer{ border-top:1px solid var(--line); padding:56px 28px 96px; background:var(--near-black); }
+  .footer-grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr; gap:40px; }
+  @media(max-width:720px){ .footer-grid{ grid-template-columns:1fr; gap:32px; } }
+  .footer-grid h4{ font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; }
+  .footer-grid p, .footer-grid a{ color:var(--grey); font-size:14px; }
+  .footer-grid ul{ list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .footer-grid ul a:hover{ color:var(--gold-bright); }
+  .footer-bottom{
+    max-width:1180px; margin:40px auto 0; padding-top:24px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    font-size:12.5px; color:var(--grey); font-family:'JetBrains Mono', monospace;
+  }
+
+  /* CALENDAR */
+  .cal-header{ display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:20px; margin-bottom:44px; }
+  .event-list{ border-top:1px solid var(--line); }
+  .event{ display:grid; grid-template-columns:120px 1fr auto auto; gap:24px; align-items:center; padding:26px 0; border-bottom:1px solid var(--line); }
+  @media(max-width:640px){ .event{ grid-template-columns:1fr auto; } .event > *:first-child{ grid-column:1/2; } }
+  .event-date{ font-family:'JetBrains Mono', monospace; color:var(--reaction); font-size:13px; }
+  .event-date .day{ font-family:'Oswald', sans-serif; font-size:30px; color:var(--white); display:block; line-height:1; margin-bottom:4px; }
+  .event-title{ font-family:'Oswald', sans-serif; font-size:18px; letter-spacing:0.01em; color:var(--white); margin-bottom:6px; text-transform:none; }
+  .event-meta{ color:var(--grey); font-size:13.5px; }
+  .tag{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    padding:5px 10px; border:1px solid var(--line); color:var(--grey); white-space:nowrap; height:fit-content;
+  }
+  .tag.gold{ color:var(--gold-bright); border-color:rgba(207,184,124,0.4); }
+  .tag.reaction{ color:var(--reaction); border-color:rgba(63,214,163,0.4); }
+  .cal-note{ margin-top:40px; padding:20px 22px; border:1px dashed var(--line); color:var(--grey); font-size:14px; }
+
+  /* JOIN */
+  .steps{ counter-reset:step; margin-top:8px; }
+  .step{ display:grid; grid-template-columns:64px 1fr auto; gap:24px; padding:30px 0; border-bottom:1px solid var(--line); }
+  .step:first-child{ border-top:1px solid var(--line); }
+  .step-num{ counter-increment:step; font-family:'Oswald', sans-serif; font-size:15px; color:var(--gold); }
+  .step-num::before{ content: counter(step, decimal-leading-zero); font-size:30px; display:block; color:var(--white); line-height:1; margin-bottom:6px; }
+  .step h3{ font-size:19px; text-transform:none; color:var(--white); margin-bottom:8px; }
+  .step p{ color:var(--grey); font-size:15px; max-width:56ch; }
+
+  .checklist{ margin-top:8px; }
+  .check-item{ display:grid; grid-template-columns:26px 1fr auto; gap:18px; align-items:flex-start; padding:24px 0; border-bottom:1px solid var(--line); }
+  .check-item:first-child{ border-top:1px solid var(--line); }
+  .check-item svg{ margin-top:2px; flex-shrink:0; }
+  .check-item p{ color:var(--white); font-size:16.5px; line-height:1.45; }
+  .join-cta{ text-align:center; }
+  .join-cta .max{ flex-direction:column; text-align:center; gap:22px; }
+  .join-cta h2{ max-width:none; }
+  .join-cta .btn{ padding:18px 44px; font-size:14px; }
+
+  .role-cards{ display:grid; grid-template-columns:repeat(2, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-top:20px; }
+  @media(max-width:720px){ .role-cards{ grid-template-columns:1fr; } }
+  .role-cards > div{ background:var(--black); padding:28px; position:relative; }
+  .role-cards h4{ font-size:16px; color:var(--gold-bright); margin-bottom:8px; text-transform:none; font-family:'Oswald',sans-serif; }
+  .role-cards p{ color:var(--grey); font-size:14px; }
+
+  .cta-band{ border-top:1px solid var(--line); padding:72px 28px; background:linear-gradient(180deg, var(--near-black), var(--black)); }
+  .cta-band .max{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px; }
+  .cta-band h2{ font-size:clamp(24px,3.6vw,38px); max-width:16ch; }
+
+  /* ABOUT */
+  .about-hero{ padding-bottom:0; }
+  .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-top:50px; }
+  @media(max-width:720px){ .stat-row{ grid-template-columns:repeat(2,1fr); } }
+  .stat{ padding:28px; border-right:1px solid var(--line); }
+  .stat:last-child{ border-right:none; }
+  .stat .num{ font-family:'Oswald', sans-serif; font-size:36px; color:var(--gold-bright); }
+  .stat .label{ font-family:'JetBrains Mono', monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--grey); margin-top:6px; }
+
+  .timeline{ margin-top:20px; }
+  .tl-item{ display:grid; grid-template-columns:100px 1fr auto; gap:24px; padding:24px 0; border-bottom:1px solid var(--line); }
+  .tl-item:first-child{ border-top:1px solid var(--line); }
+  .tl-year{ font-family:'JetBrains Mono', monospace; color:var(--reaction); font-size:15px; }
+  .tl-item h4{ font-family:'Oswald', sans-serif; font-size:16px; color:var(--white); text-transform:none; margin-bottom:6px; }
+  .tl-item p{ color:var(--grey); font-size:14.5px; }
+
+  .about-photo{ margin-top:50px; border:1px solid var(--line); position:relative; min-height:280px; background:var(--panel) center/cover no-repeat; display:flex; align-items:center; justify-content:center; }
+  .about-photo .empty-label{ color:var(--grey); font-family:'JetBrains Mono',monospace; font-size:12.5px; }
+
+  .placeholder-note{ margin-top:16px; font-family:'JetBrains Mono', monospace; font-size:11.5px; color:#6B6858; }
+
+  ::selection{ background:var(--gold); color:var(--black); }
+  :focus-visible{ outline:2px solid var(--reaction); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-wrap">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" stroke="#CFB87C" stroke-width="1.5"></circle>
+        <path d="M12 26L16 14H20L15.5 26H12Z" fill="#CFB87C"></path>
+        <path d="M20 26L24.5 14H28L23.5 26H20Z" fill="#F6F4EF"></path>
+        <circle cx="14" cy="27.5" r="1.4" fill="#3FD6A3"></circle>
+        <circle cx="26" cy="27.5" r="1.4" fill="#3FD6A3"></circle>
+      </svg>
+      <div class="brand-text">CU Boulder<span>Chem-E-Car</span></div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-page="home" class="active">Home</button>
+      <button data-page="calendar" class="">Calendar</button>
+      <button data-page="join" class="">Join</button>
+      <button data-page="about" class="">About</button>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <a class="btn nav-cta" href="mailto:chemecar@colorado.edu">Contact Us</a>
+      <button class="mobile-toggle" id="mobileToggle">Menu</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HOME ================= -->
+<main id="home" class="page active">
+
+  <div class="hero">
+    <div class="hero-bg img-edit-wrap" id="heroBg">
+      <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1B1A17"></stop>
+            <stop offset="1" stop-color="#0B0B0A"></stop>
+          </linearGradient>
+          <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+            <path d="M48 0H0V48" fill="none" stroke="rgba(246,244,239,0.05)" stroke-width="1"></path>
+          </pattern>
+        </defs>
+        <rect width="1200" height="800" fill="url(#g1)"></rect>
+        <rect width="1200" height="800" fill="url(#grid)"></rect>
+        <g transform="translate(560,430)" opacity="0.9">
+          <rect x="-260" y="-40" width="520" height="90" rx="4" fill="none" stroke="#CFB87C" stroke-width="2"></rect>
+          <rect x="-170" y="-110" width="230" height="80" rx="4" fill="none" stroke="#CFB87C" stroke-width="2"></rect>
+          <circle cx="-160" cy="60" r="42" fill="none" stroke="#F6F4EF" stroke-width="2"></circle>
+          <circle cx="160" cy="60" r="42" fill="none" stroke="#F6F4EF" stroke-width="2"></circle>
+          <circle cx="-160" cy="60" r="8" fill="#3FD6A3"></circle>
+          <circle cx="160" cy="60" r="8" fill="#3FD6A3"></circle>
+          <path d="M-60 -40 V-95" stroke="#3FD6A3" stroke-width="2"></path>
+          <circle cx="-60" cy="-105" r="10" fill="none" stroke="#3FD6A3" stroke-width="2"></circle>
+          <text x="-260" y="-125" fill="#8A867A" font-family="JetBrains Mono" font-size="13">Zn | ZnSO4 || CuSO4 | Cu</text>
+        </g>
+      </svg>
+    </div>
+    <div class="hero-scrim"></div>
+    <button class="img-edit-btn edit-only" data-img-target="heroBg" style="position:absolute; top:10px; right:10px; z-index:6;">Change Image</button>
+    <div class="hero-content">
+      <div class="eyebrow-row"><span class="dot"></span><span class="editable" contenteditable="false">AIChE STUDENT DESIGN COMPETITION — BOULDER, CO</span></div>
+      <h1><span class="editable" contenteditable="false">&nbsp;Small cars powered by</span> <em class="editable" contenteditable="false">Big chemistry</em>.</h1>
+      <p class="hero-sub editable" contenteditable="false">CU Boulder's Chem-E-Car team designs, builds, and races a shoe-box-sized car powered entirely by a chemical reaction — no batteries, no motors off the shelf. Every year, a new team of undergrads engineers the reaction, the stopping mechanism, and the chassis from scratch.</p>
+      <div class="hero-actions">
+        <a class="btn" href="mailto:chemecar@colorado.edu">Contact Us</a>
+        <a class="btn btn-outline" data-page-link="about">See Our Cars</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <span class="editable" contenteditable="false">Latest Regional Result — 2nd &amp; Nationals Qualification<br></span>
+      <span class="sep">/</span>
+      <span class="editable" contenteditable="false">Next Meeting — JSCBB-B115 Tuesdays @ 6:30</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="max">
+      <div class="section-head">
+        <span class="kicker">// WHAT WE DO</span>
+        <h2 class="editable" contenteditable="false">What We do</h2>
+        <p class="editable" contenteditable="false">An hour before competition, teams learn the exact distance the car must travel and from that must tweak there cars reaction to land as close as possible</p>
+      </div>
+      <div class="grid-3">
+        <div>
+          <span class="num">01</span>
+          <h3 class="editable" contenteditable="false">Build the Car</h3>
+          <p class="editable" contenteditable="false">We design and the chemical reaction that powers the car — galvanic cells, fuel cells, or pressure-driven systems, tuned for controllable output.</p>
+        </div>
+        <div>
+          <span class="num">02</span>
+          <h3 class="editable" contenteditable="false">Stop It On Target</h3>
+          <p class="editable" contenteditable="false">A second characterized reaction is tuned to trigger the car to stop within a few centimeters of the assigned distance.</p>
+        </div>
+        <div>
+          <span class="num">03</span>
+          <h3 class="editable" contenteditable="false">Present the Car</h3>
+          <p class="editable" contenteditable="false">Chassis, wiring, and a full safety and design poster, presented and defended in front of competition judges for a placement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="reaction-strip">
+    <div class="max split">
+      <div>
+        <h2 class="editable" contenteditable="false">Want to join? Start here.</h2>
+        <p class="editable" contenteditable="false">Despite the name no chemical engineering degree is required to join. Just a willingness to learn, build, and try new things!</p>
+        <p class="editable" contenteditable="false"><br></p>
+        <div class="hero-actions">
+          <a class="btn" data-page-link="join">How to Join</a>
+        </div>
+      </div>
+      <div class="diagram-box">
+        <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
+          <line x1="20" y1="220" x2="380" y2="220" stroke="var(--line)" stroke-width="1"></line>
+          <path d="M20 210 C 80 160, 140 60, 200 40 S 320 90, 380 20" fill="none" stroke="#3FD6A3" stroke-width="2"></path>
+          <circle cx="200" cy="40" r="4" fill="#CFB87C"></circle>
+          <text x="205" y="34" fill="#CFB87C" font-family="JetBrains Mono" font-size="11">target distance</text>
+          <text x="20" y="240" fill="#8A867A" font-family="JetBrains Mono" font-size="11">t = 0</text>
+          <text x="360" y="240" fill="#8A867A" font-family="JetBrains Mono" font-size="11">stop</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+
+</main>
+
+<!-- ================= CALENDAR ================= -->
+<main id="calendar" class="page">
+  <section style="padding-top:56px;">
+    <div class="max">
+      <div class="cal-header">
+        <div>
+          <span class="kicker" style="display:block; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.14em; color:var(--reaction); margin-bottom:14px;">// SCHEDULE</span>
+          <h2 style="font-size:clamp(28px,4vw,44px);">Team Calendar</h2>
+        </div>
+        <p class="editable" contenteditable="false" style="color:var(--grey); max-width:40ch; font-size:15px;">All events are open for anyone to join!</p>
+      </div>
+
+      <div class="event-list" id="eventList">
+        <div class="event">
+          <div class="event-date"><span class="day editable" contenteditable="false">14</span><span class="editable" contenteditable="false">SEP</span></div>
+          <div>
+            <div class="event-title editable" contenteditable="false">General Interest Meeting</div>
+            <div class="event-meta editable" contenteditable="false">Engineering Center · 6:00 PM</div>
+          </div>
+          <span class="tag gold editable" contenteditable="false">New Members</span>
+          <button class="remove-item admin-only" title="Remove event">×</button>
+        </div>
+        <div class="event">
+          <div class="event-date"><span class="day editable" contenteditable="false">21</span><span class="editable" contenteditable="false">SEP</span></div>
+          <div>
+            <div class="event-title editable" contenteditable="false">Subteam Kickoff — Reaction, Mechanical, Electrical</div>
+            <div class="event-meta editable" contenteditable="false">Chem Eng Building · 6:00 PM</div>
+          </div>
+          <span class="tag editable" contenteditable="false">Build</span>
+          <button class="remove-item admin-only" title="Remove event">×</button>
+        </div>
+        <div class="event">
+          <div class="event-date"><span class="day editable" contenteditable="false">05</span><span class="editable" contenteditable="false">OCT</span></div>
+          <div>
+            <div class="event-title editable" contenteditable="false">Build Night</div>
+            <div class="event-meta editable" contenteditable="false">Weekly, Thursdays</div>
+          </div>
+          <span class="tag editable" contenteditable="false">Build</span>
+          <button class="remove-item admin-only" title="Remove event">×</button>
+        </div>
+        <div class="event">
+          <div class="event-date"><span class="day editable" contenteditable="false">18</span><span class="editable" contenteditable="false">OCT</span></div>
+          <div>
+            <div class="event-title editable" contenteditable="false">Reaction Trial Runs</div>
+            <div class="event-meta editable" contenteditable="false">Lab TBD</div>
+          </div>
+          <span class="tag reaction editable" contenteditable="false">Testing</span>
+          <button class="remove-item admin-only" title="Remove event">×</button>
+        </div>
+        <div class="event">
+          <div class="event-date"><span class="day editable" contenteditable="false">08</span><span class="editable" contenteditable="false">NOV</span></div>
+          <div>
+            <div class="event-title editable" contenteditable="false">Rocky Mountain Regional Conference</div>
+            <div class="event-meta editable" contenteditable="false">Competition weekend</div>
+          </div>
+          <span class="tag gold editable" contenteditable="false">Competition</span>
+          <button class="remove-item admin-only" title="Remove event">×</button>
+        </div>
+      </div>
+      <button class="add-item-btn admin-only" id="addEvent">+ Add Event</button>
+
+      <div class="cal-note editable" contenteditable="false">Follow along here for meeting times, build nights, and competition dates.</div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= JOIN ================= -->
+<main id="join" class="page">
+  <section style="padding-top:56px;">
+    <div class="max">
+      <div class="section-head">
+        <span class="kicker">// GET INVOLVED</span>
+        <h2 class="editable" contenteditable="false">Does This Sound Like You?</h2>
+        <p class="editable" contenteditable="false">Open to all majors and all years. No prior Chem-E-Car experience needed.</p>
+      </div>
+
+      <div class="checklist" id="soundsList">
+        <div class="check-item">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#3FD6A3" stroke-width="1.5"></circle><path d="M6.5 11.5L9.5 14.5L15.5 8" stroke="#3FD6A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <p class="editable" contenteditable="false">You want hands-on engineering experience outside the classroom.</p>
+          <button class="remove-item admin-only" title="Remove">×</button>
+        </div>
+        <div class="check-item">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#3FD6A3" stroke-width="1.5"></circle><path d="M6.5 11.5L9.5 14.5L15.5 8" stroke="#3FD6A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <p class="editable" contenteditable="false">You like the idea of building something great and then competing with it</p>
+          <button class="remove-item admin-only" title="Remove">×</button>
+        </div>
+        <div class="check-item">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#3FD6A3" stroke-width="1.5"></circle><path d="M6.5 11.5L9.5 14.5L15.5 8" stroke="#3FD6A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <p class="editable" contenteditable="false">You're curious about chemistry, circuits, or machining</p>
+          <button class="remove-item admin-only" title="Remove">×</button>
+        </div>
+        <div class="check-item">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#3FD6A3" stroke-width="1.5"></circle><path d="M6.5 11.5L9.5 14.5L15.5 8" stroke="#3FD6A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <p class="editable" contenteditable="false">You want to meet other CU engineers who build things for fun</p>
+          <button class="remove-item admin-only" title="Remove">×</button>
+        </div>
+      </div>
+      <button class="add-item-btn admin-only" id="addCheck">+ Add Statement</button>
+    </div>
+  </section>
+
+  <div class="cta-band join-cta">
+    <div class="max">
+      <h2 class="editable" contenteditable="false">Sounds like you?&nbsp;</h2>
+      <a class="btn" id="contactEmailLink" href="mailto:chemecar@colorado.edu">Contact Us →</a>
+    </div>
+  </div>
+</main>
+
+<!-- ================= ABOUT ================= -->
+<main id="about" class="page">
+  <section class="about-hero" style="padding-top:56px; padding-bottom:0;">
+    <div class="max">
+      <div class="section-head">
+        <span class="kicker">// ABOUT US</span>
+        <h2 class="editable" contenteditable="false">Chemical engineering, built by hand.</h2>
+        <p class="editable" contenteditable="false">CU Boulder's Chem-E-Car team is a student organization within the Department of Chemical &amp; Biological Engineering, competing at AIChE's Rocky Mountain Regional Conference each year for a shot at Nationals.</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="num editable" contenteditable="false">20</div><div class="label editable" contenteditable="false">Active Members</div></div>
+        <div class="stat"><div class="num editable" contenteditable="false">5</div><div class="label editable" contenteditable="false">Years Competing</div></div>
+        <div class="stat"><div class="num editable" contenteditable="false">6</div><div class="label editable" contenteditable="false">Majors Represented</div></div>
+        <div class="stat"><div class="num editable" contenteditable="false">10</div><div class="label editable" contenteditable="false">Regional Placements</div></div>
+      </div>
+      <div class="about-photo img-edit-wrap" id="aboutPhoto" style="background-image: url(&quot;https://www.colorado.edu/chbe/sites/default/files/styles/medium_750px_50_display_size_/public/2025-04/Chem-E-Car%206.JPG?itok=icwIbqU_&quot;); background-size: cover; background-position: center center;">
+        <span class="empty-label" style="display: none;">Team photo — not yet added</span>
+        <button class="img-edit-btn edit-only" data-img-target="aboutPhoto">Change Image</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="max">
+      <div class="section-head">
+        <span class="kicker">// TEAM HISTORY</span>
+        <h2 class="editable" contenteditable="false">Past Cars</h2>
+        <p class="editable" contenteditable="false">A look back at the cars our team has built and raced.</p>
+      </div>
+      <div class="timeline" id="timelineList">
+        <div class="tl-item">
+          <div class="tl-year editable" contenteditable="false">2026</div>
+          <div>
+            <h4 class="editable" contenteditable="false">???</h4>
+            <p class="editable" contenteditable="false">???</p>
+          </div>
+          <button class="remove-item admin-only" title="Remove entry">×</button>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year editable" contenteditable="false">2025</div>
+          <div>
+            <h4 class="editable" contenteditable="false">The Stinkinator</h4>
+            <p class="editable" contenteditable="false">Reaction type, notable design choice, and regional result go here.</p>
+          </div>
+          <button class="remove-item admin-only" title="Remove entry">×</button>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year editable" contenteditable="false">2025</div>
+          <div>
+            <h4 class="editable" contenteditable="false">Pushing P'</h4>
+            <p class="editable" contenteditable="false">Reaction type, notable design choice, and regional result go here.</p>
+          </div>
+          <button class="remove-item admin-only" title="Remove entry">×</button>
+        </div>
+      <div class="tl-item">
+      <div class="tl-year editable" contenteditable="false">2024</div>
+      <div>
+        <h4 class="editable" contenteditable="false">Don't Zinc and Drive</h4>
+        <p class="editable" contenteditable="false">Reaction type, notable design choice, and result.</p>
+      </div>
+      <button class="remove-item admin-only" title="Remove entry">×</button></div><div class="tl-item">
+      <div class="tl-year editable" contenteditable="false">2024</div>
+      <div>
+        <h4 class="editable" contenteditable="false">Car Name</h4>
+        <p class="editable" contenteditable="false">Reaction type, notable design choice, and result.</p>
+      </div>
+      <button class="remove-item admin-only" title="Remove entry">×</button></div></div>
+      <button class="add-item-btn admin-only" id="addTimeline">+ Add Past Car</button>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <div class="max">
+      <div class="section-head">
+        <span class="kicker">// FACULTY &amp; SPONSORS</span>
+        <h2 class="editable" contenteditable="false">Who supports us</h2>
+        <p class="editable" contenteditable="false">We're grateful for the support of our faculty advisors and the Department of Chemical &amp; Biological Engineering.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <h4>CU Boulder Chem-E-Car</h4>
+      <p class="editable" contenteditable="false" style="max-width:36ch;">A student team in the Department of Chemical &amp; Biological Engineering, designing chemically-powered shoe-box-sized&nbsp;cars for AIChE's national student design competition.</p>
+    </div>
+    <div>
+      <h4>Site</h4>
+      <ul>
+        <li><a data-page-link="home">Home</a></li>
+        <li><a data-page-link="calendar">Calendar</a></li>
+        <li><a data-page-link="join">Join</a></li>
+        <li><a data-page-link="about">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="mailto:chemecar@colorado.edu" class="editable" contenteditable="false">chemecar@colorado.edu</a></li>
+        <li><a href="#" class="editable" contenteditable="false">Instagram - boulderchemecar</a></li>
+        <li class="editable" contenteditable="false">Boulder, CO</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>CU BOULDER CHEM-E-CAR</span>
+    <span class="editable" contenteditable="false">© 2026 · AIChE Student Chapter</span>
+  </div>
+</footer>
+
+<!-- ================= ADMIN UI ================= -->
+<button id="adminToggle" class="admin-only" title="Edit this site">EDIT</button>
+<div id="debugStatus" style="display:none;">checking admin status…</div>
+<div id="adminBar" class="">
+  <div class="left">
+    <span class="status dot" id="adminStatus">Edit mode off</span>
+  </div>
+  <div class="left">
+    <button class="btn-ghost btn-small" id="cancelEdit">Cancel</button>
+    <button class="btn btn-small" id="saveEdit">Save &amp; Publish</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div id="imgModal" class="">
+  <div class="modal-box">
+    <h3>Change Image</h3>
+    <p>Paste a direct image URL (ending in .jpg, .png, etc).</p>
+    <input type="text" id="imgModalInput" placeholder="https://example.com/photo.jpg">
+    <div class="modal-actions">
+      <button class="btn-ghost btn-small" id="imgModalCancel">Cancel</button>
+      <button class="btn btn-small" id="imgModalUse">Use Image</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  /* ---------- TAB NAV ---------- */
+  const pages = document.querySelectorAll('.page');
+  const tabButtons = document.querySelectorAll('nav.tabs button');
+  const pageLinks = document.querySelectorAll('[data-page-link]');
+  const tabsNav = document.getElementById('tabs');
+  const mobileToggle = document.getElementById('mobileToggle');
+
+  function showPage(id){
+    pages.forEach(p => p.classList.toggle('active', p.id === id));
+    tabButtons.forEach(b => b.classList.toggle('active', b.dataset.page === id));
+    tabsNav.classList.remove('open');
+    window.scrollTo({top:0, behavior:'auto'});
+  }
+  tabButtons.forEach(b => b.addEventListener('click', () => showPage(b.dataset.page)));
+  pageLinks.forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    showPage(a.dataset.pageLink);
+  }));
+  mobileToggle.addEventListener('click', () => tabsNav.classList.toggle('open'));
+
+  /* ---------- ADMIN / EDIT MODE ---------- */
+  const adminToggle = document.getElementById('adminToggle');
+  const adminBar = document.getElementById('adminBar');
+  const adminStatus = document.getElementById('adminStatus');
+  const cancelEdit = document.getElementById('cancelEdit');
+  const saveEdit = document.getElementById('saveEdit');
+  const toastEl = document.getElementById('toast');
+
+  let editing = false;
+  let artifactApi = null;
+
+  function toast(msg, isError){
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('error', !!isError);
+    toastEl.classList.add('show');
+    setTimeout(()=> toastEl.classList.remove('show'), 3200);
+  }
+
+  function setEditing(on){
+    editing = on;
+    document.body.classList.toggle('editing', on);
+    document.querySelectorAll('.editable').forEach(el => { el.contentEditable = on ? 'true' : 'false'; });
+    adminBar.classList.toggle('open', on);
+    adminStatus.textContent = on ? 'Editing — click text to change it' : 'Edit mode off';
+    adminToggle.style.display = on ? 'none' : '';
+  }
+
+  adminToggle.addEventListener('click', () => setEditing(true));
+  cancelEdit.addEventListener('click', () => location.reload());
+
+  /* image change (custom modal — native prompt() is blocked in this sandboxed view) */
+  const imgModal = document.getElementById('imgModal');
+  const imgModalInput = document.getElementById('imgModalInput');
+  const imgModalCancel = document.getElementById('imgModalCancel');
+  const imgModalUse = document.getElementById('imgModalUse');
+  let imgModalTargetId = null;
+
+  document.querySelectorAll('.img-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      imgModalTargetId = btn.dataset.imgTarget;
+      imgModalInput.value = '';
+      imgModal.classList.add('open');
+      imgModalInput.focus();
+    });
+  });
+
+  function closeImgModal(){
+    imgModal.classList.remove('open');
+    imgModalTargetId = null;
+  }
+
+  function applyImage(){
+    const url = imgModalInput.value.trim();
+    if(!url || !imgModalTargetId){ closeImgModal(); return; }
+    const target = document.getElementById(imgModalTargetId);
+    if(target){
+      target.style.backgroundImage = `url("${url}")`;
+      target.style.backgroundSize = 'cover';
+      target.style.backgroundPosition = 'center';
+      const svg = target.querySelector('svg');
+      if(svg) svg.style.display = 'none';
+      const label = target.querySelector('.empty-label');
+      if(label) label.style.display = 'none';
+    }
+    closeImgModal();
+  }
+
+  imgModalCancel.addEventListener('click', closeImgModal);
+  imgModalUse.addEventListener('click', applyImage);
+  imgModalInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') applyImage(); });
+  imgModal.addEventListener('click', (e) => { if(e.target === imgModal) closeImgModal(); });
+
+  /* remove item (event delegation, works for dynamically added items too) */
+  document.addEventListener('click', (e) => {
+    if(e.target.classList.contains('remove-item')){
+      const item = e.target.closest('.event, .step, .tl-item, .role-cards > div, .check-item');
+      if(item) item.remove();
+    }
+  });
+
+  /* add item buttons */
+  function makeEditableTrue(node){
+    node.querySelectorAll('.editable').forEach(el => el.contentEditable = 'true');
+    return node;
+  }
+
+  document.getElementById('addEvent').addEventListener('click', () => {
+    const list = document.getElementById('eventList');
+    const item = document.createElement('div');
+    item.className = 'event';
+    item.innerHTML = `
+      <div class="event-date"><span class="day editable" contenteditable="true">01</span><span class="editable" contenteditable="true">JAN</span></div>
+      <div>
+        <div class="event-title editable" contenteditable="true">New Event</div>
+        <div class="event-meta editable" contenteditable="true">Location · Time</div>
+      </div>
+      <span class="tag editable" contenteditable="true">Tag</span>
+      <button class="remove-item admin-only" title="Remove event">×</button>`;
+    list.appendChild(item);
+  });
+
+  document.getElementById('addCheck').addEventListener('click', () => {
+    const list = document.getElementById('soundsList');
+    const item = document.createElement('div');
+    item.className = 'check-item';
+    item.innerHTML = `
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" stroke="#3FD6A3" stroke-width="1.5"/><path d="M6.5 11.5L9.5 14.5L15.5 8" stroke="#3FD6A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <p class="editable" contenteditable="true">New statement.</p>
+      <button class="remove-item admin-only" title="Remove">×</button>`;
+    list.appendChild(item);
+  });
+
+  document.getElementById('addTimeline').addEventListener('click', () => {
+    const list = document.getElementById('timelineList');
+    const item = document.createElement('div');
+    item.className = 'tl-item';
+    item.innerHTML = `
+      <div class="tl-year editable" contenteditable="true">20XX</div>
+      <div>
+        <h4 class="editable" contenteditable="true">Car Name</h4>
+        <p class="editable" contenteditable="true">Reaction type, notable design choice, and result.</p>
+      </div>
+      <button class="remove-item admin-only" title="Remove entry">×</button>`;
+    list.appendChild(item);
+  });
+
+  /* ---------- SAVE & PUBLISH ---------- */
+  function withTimeout(promise, ms, label){
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject({code:'timeout', message: label + ' timed out'}), ms))
+    ]);
+  }
+
+  saveEdit.addEventListener('click', async () => {
+    if(!artifactApi){ toast('Publishing is not available in this view.', true); return; }
+    setEditing(false); // strips contenteditable attrs before capture
+
+    // Build the snapshot BEFORE touching any button/status text, so the
+    // "Publishing…" busy state is never itself captured and saved.
+    const bodyClone = document.body.cloneNode(true);
+    bodyClone.classList.remove('editing', 'admin-ready');
+    if(bodyClone.classList.length === 0) bodyClone.removeAttribute('class');
+    const cloneBar = bodyClone.querySelector('#adminBar');
+    if(cloneBar) cloneBar.classList.remove('open');
+    const cloneToggle = bodyClone.querySelector('#adminToggle');
+    if(cloneToggle) cloneToggle.removeAttribute('style');
+    const cloneStatus = bodyClone.querySelector('#adminStatus');
+    if(cloneStatus) cloneStatus.textContent = 'Edit mode off';
+    const cloneSave = bodyClone.querySelector('#saveEdit');
+    if(cloneSave){ cloneSave.removeAttribute('disabled'); cloneSave.textContent = 'Save & Publish'; }
+    const cloneToast = bodyClone.querySelector('#toast');
+    if(cloneToast){ cloneToast.className = 'toast'; cloneToast.textContent = ''; }
+    const cloneDebug = bodyClone.querySelector('#debugStatus');
+    if(cloneDebug) cloneDebug.textContent = 'checking admin status…';
+    const cloneImgModal = bodyClone.querySelector('#imgModal');
+    if(cloneImgModal) cloneImgModal.classList.remove('open');
+    const cloneImgInput = bodyClone.querySelector('#imgModalInput');
+    if(cloneImgInput) cloneImgInput.removeAttribute('value');
+
+    const html = '<!doctype html>\n<html lang="en">\n'
+      + document.head.outerHTML + '\n'
+      + '<body>' + bodyClone.innerHTML + '</body>\n'
+      + '</html>';
+
+    // Only now show busy state on the LIVE page — this never gets published.
+    saveEdit.disabled = true;
+    saveEdit.textContent = 'Publishing…';
+    try {
+      await withTimeout(artifactApi.publish(html), 20000, 'Publish');
+      toast('Published — everyone now sees this version.');
+    } catch (err) {
+      console.error(err);
+      if(err && err.code === 'conflict'){
+        toast('Someone else published first — reload to see the latest.', true);
+      } else if(err && (err.code === 'not_granted' || err.code === 'not_writer')){
+        toast("You don't have edit access to this page.", true);
+      } else if(err && err.code === 'timeout'){
+        toast('Publish is taking too long — check your connection and try again.', true);
+      } else {
+        toast('Could not publish' + (err && err.message ? ': ' + err.message : '') + '.', true);
+      }
+    } finally {
+      saveEdit.disabled = false;
+      saveEdit.textContent = 'Save & Publish';
+    }
+  });
+
+  /* ---------- ADMIN GATING ---------- */
+  (async function initAdmin(){
+    const dbg = document.getElementById('debugStatus');
+    function setDbg(lines){ dbg.innerHTML = lines.join('<br>'); }
+    try {
+      if(!window.claude || !window.claude.use){
+        setDbg(['window.claude: NOT PRESENT', 'This view has no runtime capabilities.']);
+        return;
+      }
+      const [artifact, user] = await Promise.all([
+        window.claude.use('artifact'),
+        window.claude.use('user')
+      ]);
+      artifactApi = artifact;
+      const canEdit = user && user.canEdit ? await user.canEdit() : false;
+      const isOwner = user && user.isOwner ? await user.isOwner() : false;
+      setDbg([
+        'window.claude: present',
+        'artifact capability: ' + (artifact ? 'OK' : 'null'),
+        'user capability: ' + (user ? 'OK' : 'null'),
+        'canEdit(): ' + canEdit,
+        'isOwner(): ' + isOwner
+      ]);
+      if(artifact && canEdit){
+        document.body.classList.add('admin-ready');
+      }
+    } catch(err){
+      setDbg(['Error during admin init:', String(err && err.message || err)]);
+      console.error('Admin init failed', err);
+    }
+  })();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
