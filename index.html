@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CU Boulder Chem-E-Car</title>
+<meta name="description" content="CU Boulder's Chem-E-Car team designs, builds, and races a shoe-box-sized car powered entirely by a chemical reaction. See the calendar and find out how to join.">
+<link rel="icon" type="image/png" href="assets/cu-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
@@ -145,11 +147,12 @@
     padding:18px 28px;
   }
   .brand{ display:flex; align-items:center; gap:12px; }
-  .brand-mark{ width:34px; height:34px; flex-shrink:0; }
+  .brand-mark{ height:40px; width:auto; flex-shrink:0; display:block; }
   .brand-text{
     font-family:'Oswald', sans-serif; font-weight:600; font-size:16px;
     letter-spacing:0.06em; text-transform:uppercase; line-height:1.1;
   }
+  .brand-text{ white-space:nowrap; }
   .brand-text span{ display:block; color:var(--gold); font-size:11px; letter-spacing:0.14em; margin-top:2px; }
   nav.tabs{ display:flex; gap:2px; }
   nav.tabs button{
@@ -160,8 +163,8 @@
   }
   nav.tabs button:hover{ color:var(--white); }
   nav.tabs button.active{ color:var(--gold-bright); border-bottom-color:var(--gold); }
-  .nav-cta{ display:none; }
-  @media(min-width:720px){ .nav-cta{ display:inline-block; } }
+  .btn.nav-cta{ display:none; }
+  @media(min-width:720px){ .btn.nav-cta{ display:inline-flex; } }
   .btn{
     display:inline-flex; align-items:center; gap:8px;
     background:var(--gold); color:var(--black);
@@ -214,6 +217,19 @@
   .hero-sub{ margin-top:22px; max-width:52ch; font-size:17px; color:#C9C6BB; }
   .hero-actions{ margin-top:36px; display:flex; gap:14px; flex-wrap:wrap; }
 
+  /* Phones: the car drawing becomes a banner above the text instead of sitting behind it */
+  @media(max-width:719px){
+    .hero{ display:block; min-height:0; padding:0 0 52px; }
+    .hero-bg{ position:relative; inset:auto; width:100%; aspect-ratio:13/9; max-height:46vh; overflow:hidden; background-color:var(--near-black); }
+    .hero-bg svg{ position:absolute; width:197%; max-width:none; height:auto; aspect-ratio:3/2; left:-42%; top:-48%; }
+    .hero-scrim{ inset:0 0 auto 0; height:auto; aspect-ratio:13/9; max-height:46vh; background:linear-gradient(180deg, rgba(11,11,10,0) 0%, rgba(11,11,10,0) 62%, var(--black) 100%); }
+    .hero-content{ padding:6px 28px 0; }
+    .eyebrow-row{ margin-bottom:16px; }
+    .hero h1{ font-size:clamp(38px, 11.5vw, 58px); }
+    .hero-sub{ margin-top:18px; font-size:16.5px; color:#DAD7CD; }
+    .hero-actions{ margin-top:28px; }
+  }
+
   .banner{ background:var(--panel); border-bottom:1px solid var(--line); padding:22px 28px; }
   .banner-row{
     max-width:1180px; margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
@@ -264,20 +280,87 @@
   }
 
   /* CALENDAR */
-  .cal-header{ display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:20px; margin-bottom:44px; }
-  .event-list{ border-top:1px solid var(--line); }
-  .event{ display:grid; grid-template-columns:120px 1fr auto auto; gap:24px; align-items:center; padding:26px 0; border-bottom:1px solid var(--line); }
-  @media(max-width:640px){ .event{ grid-template-columns:1fr auto; } .event > *:first-child{ grid-column:1/2; } }
-  .event-date{ font-family:'JetBrains Mono', monospace; color:var(--reaction); font-size:13px; }
-  .event-date .day{ font-family:'Oswald', sans-serif; font-size:30px; color:var(--white); display:block; line-height:1; margin-bottom:4px; }
-  .event-title{ font-family:'Oswald', sans-serif; font-size:18px; letter-spacing:0.01em; color:var(--white); margin-bottom:6px; text-transform:none; }
-  .event-meta{ color:var(--grey); font-size:13.5px; }
-  .tag{
-    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
-    padding:5px 10px; border:1px solid var(--line); color:var(--grey); white-space:nowrap; height:fit-content;
+  .cal-header{ display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:20px; margin-bottom:36px; }
+  .is-hidden{ display:none !important; }
+
+  .cal-next{
+    display:grid; grid-template-columns:auto 1fr auto; gap:28px; align-items:center;
+    background:var(--near-black); border:1px solid var(--line); border-left:3px solid var(--gold);
+    padding:26px 28px; margin-bottom:28px;
   }
-  .tag.gold{ color:var(--gold-bright); border-color:rgba(207,184,124,0.4); }
-  .tag.reaction{ color:var(--reaction); border-color:rgba(63,214,163,0.4); }
+  .cal-next-when{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.1em; color:var(--reaction); text-transform:uppercase; }
+  .cal-next-when b{ display:block; font-family:'Oswald', sans-serif; font-weight:600; font-size:44px; line-height:1; letter-spacing:0.01em; color:var(--white); margin-bottom:6px; }
+  .cal-next-label{ font-family:'JetBrains Mono', monospace; font-size:11.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  .cal-next-title{ font-family:'Oswald', sans-serif; font-size:clamp(20px, 2.6vw, 28px); line-height:1.15; color:var(--white); }
+  .cal-next-meta{ color:#B9B5A8; font-size:14.5px; margin-top:6px; }
+  .cal-next-empty{ grid-column:1/-1; color:#B9B5A8; font-size:15px; }
+  @media(max-width:719px){
+    .cal-next{ grid-template-columns:auto 1fr; gap:18px 20px; padding:22px 20px; }
+    .cal-next .btn{ grid-column:1/-1; justify-content:center; }
+    .cal-next-when b{ font-size:38px; }
+  }
+
+  .cal-layout{ display:grid; grid-template-columns:minmax(0, 400px) minmax(0, 1fr); gap:44px; align-items:start; }
+  @media(max-width:900px){ .cal-layout{ grid-template-columns:1fr; gap:32px; } }
+  .cal-panel{ background:var(--near-black); border:1px solid var(--line); padding:22px; }
+  @media(min-width:901px){ .cal-panel{ position:sticky; top:calc(96px + env(safe-area-inset-top, 0px)); } }
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+  .cal-month{ font-family:'Oswald', sans-serif; font-weight:600; font-size:20px; letter-spacing:0.05em; text-transform:uppercase; color:var(--white); }
+  .cal-month span{ color:var(--gold); margin-left:6px; }
+  .cal-arrow{
+    width:40px; height:40px; background:transparent; border:1px solid var(--line); color:var(--white);
+    font-size:20px; line-height:1; cursor:pointer;
+  }
+  .cal-arrow:hover{ border-color:var(--gold); color:var(--gold-bright); }
+  .cal-dow, .cal-grid{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:4px; }
+  .cal-dow{ margin-bottom:6px; }
+  .cal-dow span{ text-align:center; font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.06em; color:var(--grey); padding:4px 0; }
+  .cal-cell{
+    aspect-ratio:1/1; min-height:40px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    background:transparent; border:1px solid transparent; color:#857F72;
+    font-family:'Inter', sans-serif; font-size:14.5px; font-variant-numeric:tabular-nums; padding:0;
+  }
+  .cal-cell.blank{ visibility:hidden; }
+  .cal-cell.has-events{ color:var(--white); font-weight:600; background:rgba(246,244,239,0.045); cursor:pointer; }
+  .cal-cell.has-events:hover{ border-color:var(--gold); }
+  .cal-cell.is-today{ border-color:var(--reaction); color:var(--reaction); }
+  .cal-cell.is-selected, .cal-cell.is-selected.is-today{ background:var(--gold); border-color:var(--gold); color:var(--black); }
+  .cal-dots{ display:flex; gap:3px; height:5px; }
+  .cal-dots i{ width:5px; height:5px; border-radius:50%; background:var(--gold); }
+  .cal-cell.is-selected .cal-dots i{ background:var(--black); }
+  .cal-panel-foot{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line); font-size:12.5px; color:var(--grey); }
+  .cal-link{
+    background:none; border:none; padding:6px 0; cursor:pointer; color:var(--gold-bright);
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.04em; text-decoration:underline; text-underline-offset:3px;
+  }
+  .cal-link:hover{ color:var(--white); }
+  .cal-arrow:focus-visible, .cal-cell:focus-visible, .cal-link:focus-visible{ outline:2px solid var(--reaction); outline-offset:2px; }
+
+  .cal-agenda-head{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; padding-bottom:14px; }
+  .cal-agenda-head h3{ font-size:22px; letter-spacing:0.03em; color:var(--white); }
+  .cal-empty{ padding:26px 0; border-bottom:1px solid var(--line); color:#B9B5A8; font-size:15px; }
+  .event-list{ border-top:1px solid var(--line); }
+  .event{ display:grid; grid-template-columns:86px minmax(0,1fr) auto; gap:8px 20px; align-items:center; padding:22px 0; border-bottom:1px solid var(--line); }
+  .event.is-past > *:not(.event-edit):not(.remove-item){ opacity:0.45; }
+  .event-date{ font-family:'JetBrains Mono', monospace; color:var(--reaction); font-size:12px; letter-spacing:0.04em; white-space:nowrap; }
+  .event-date .day{ font-family:'Oswald', sans-serif; font-size:30px; letter-spacing:0.01em; color:var(--white); display:block; line-height:1; margin-bottom:5px; }
+  .event-title{ font-family:'Oswald', sans-serif; font-size:18px; letter-spacing:0.01em; color:var(--white); margin-bottom:6px; text-transform:none; }
+  .event-meta{ color:#A8A497; font-size:13.5px; }
+  @media(max-width:560px){
+    .event{ grid-template-columns:72px minmax(0,1fr) auto; }
+    .event-date .day{ font-size:26px; }
+  }
+  .event-edit{
+    grid-column:1/-1; display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center;
+    margin-top:6px; padding:12px 14px; background:rgba(63,214,163,0.06); border:1px dashed rgba(63,214,163,0.35);
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:#B9B5A8;
+  }
+  .event-edit label{ display:flex; align-items:center; gap:8px; }
+  .event-edit input[type=date], .event-edit select{
+    background:var(--black); color:var(--white); border:1px solid var(--line); padding:7px 9px;
+    font-family:'Inter', sans-serif; font-size:13px; color-scheme:dark;
+  }
+  .event-edit input[type=checkbox]{ width:16px; height:16px; accent-color:var(--reaction); }
   .cal-note{ margin-top:40px; padding:20px 22px; border:1px dashed var(--line); color:var(--grey); font-size:14px; }
 
   /* JOIN */
@@ -335,17 +418,10 @@
 </style>
 </head>
 <body>
-
 <header>
   <div class="nav-wrap">
     <div class="brand">
-      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="20" cy="20" r="19" stroke="#CFB87C" stroke-width="1.5"></circle>
-        <path d="M12 26L16 14H20L15.5 26H12Z" fill="#CFB87C"></path>
-        <path d="M20 26L24.5 14H28L23.5 26H20Z" fill="#F6F4EF"></path>
-        <circle cx="14" cy="27.5" r="1.4" fill="#3FD6A3"></circle>
-        <circle cx="26" cy="27.5" r="1.4" fill="#3FD6A3"></circle>
-      </svg>
+      <img class="brand-mark" src="assets/cu-logo.png" alt="University of Colorado Boulder Buffaloes logo" width="240" height="176">
       <div class="brand-text">CU Boulder<span>Chem-E-Car</span></div>
     </div>
     <nav class="tabs" id="tabs">
@@ -477,54 +553,67 @@
         <p class="editable" contenteditable="false" style="color:var(--grey); max-width:40ch; font-size:15px;">All events are open for anyone to join!</p>
       </div>
 
+      <div class="cal-next" id="calNext"><div class="cal-next-when"><b>06</b>OCT TUE</div><div><div class="cal-next-label">Next up tomorrow</div><div class="cal-next-title">Build Night</div><div class="cal-next-meta">Weekly</div></div><button type="button" class="btn btn-outline">Show on calendar</button></div>
+
+      <div class="cal-layout">
+        <div class="cal-panel">
+          <div class="cal-nav">
+            <button class="cal-arrow" id="calPrev" aria-label="Previous month">‹</button>
+            <div class="cal-month" id="calMonth" aria-live="polite">September<span>2026</span></div>
+            <button class="cal-arrow" id="calFwd" aria-label="Next month">›</button>
+          </div>
+          <div class="cal-dow" aria-hidden="true"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+          <div class="cal-grid" id="calGrid"><div class="cal-cell blank"></div><div class="cal-cell blank"></div><div class="cal-cell"><span>1</span><span class="cal-dots"></span></div><div class="cal-cell"><span>2</span><span class="cal-dots"></span></div><div class="cal-cell"><span>3</span><span class="cal-dots"></span></div><div class="cal-cell"><span>4</span><span class="cal-dots"></span></div><div class="cal-cell"><span>5</span><span class="cal-dots"></span></div><div class="cal-cell"><span>6</span><span class="cal-dots"></span></div><div class="cal-cell"><span>7</span><span class="cal-dots"></span></div><div class="cal-cell"><span>8</span><span class="cal-dots"></span></div><div class="cal-cell"><span>9</span><span class="cal-dots"></span></div><div class="cal-cell"><span>10</span><span class="cal-dots"></span></div><div class="cal-cell"><span>11</span><span class="cal-dots"></span></div><div class="cal-cell"><span>12</span><span class="cal-dots"></span></div><div class="cal-cell"><span>13</span><span class="cal-dots"></span></div><button class="cal-cell has-events" type="button" aria-label="September 14: Arduino Workshop" aria-pressed="false"><span>14</span><span class="cal-dots"><i class="gold"></i></span></button><div class="cal-cell"><span>15</span><span class="cal-dots"></span></div><div class="cal-cell"><span>16</span><span class="cal-dots"></span></div><div class="cal-cell"><span>17</span><span class="cal-dots"></span></div><div class="cal-cell"><span>18</span><span class="cal-dots"></span></div><div class="cal-cell"><span>19</span><span class="cal-dots"></span></div><div class="cal-cell"><span>20</span><span class="cal-dots"></span></div><button class="cal-cell has-events" type="button" aria-label="September 21: Reaction Workshop" aria-pressed="false"><span>21</span><span class="cal-dots"><i></i></span></button><div class="cal-cell"><span>22</span><span class="cal-dots"></span></div><div class="cal-cell"><span>23</span><span class="cal-dots"></span></div><div class="cal-cell"><span>24</span><span class="cal-dots"></span></div><div class="cal-cell"><span>25</span><span class="cal-dots"></span></div><div class="cal-cell"><span>26</span><span class="cal-dots"></span></div><div class="cal-cell"><span>27</span><span class="cal-dots"></span></div><div class="cal-cell"><span>28</span><span class="cal-dots"></span></div><div class="cal-cell"><span>29</span><span class="cal-dots"></span></div><div class="cal-cell"><span>30</span><span class="cal-dots"></span></div></div>
+          <div class="cal-panel-foot">
+            <span>Tap a marked day to see what's on.</span>
+            <button class="cal-link" id="calToday">Today</button>
+          </div>
+        </div>
+
+        <div class="cal-agenda">
+          <div class="cal-agenda-head">
+            <h3 id="calAgendaTitle">September 2026</h3>
+            <button class="cal-link is-hidden" id="calClearDay">Show the whole month</button>
+          </div>
       <div class="event-list" id="eventList">
-        <div class="event">
-          <div class="event-date"><span class="day editable" contenteditable="false">14</span><span class="editable" contenteditable="false">SEP</span></div>
+        
+        
+        
+        
+        
+      <div class="event is-hidden" data-date="2026-10-06" data-repeat="weekly">
+          <div class="event-date"><span class="day">TUE</span><span class="mon">EVERY WEEK</span></div>
           <div>
-            <div class="event-title editable" contenteditable="false">General Interest Meeting</div>
-            <div class="event-meta editable" contenteditable="false">Engineering Center · 6:00 PM</div>
+            <div class="event-title editable" contenteditable="false">Weekly Meeting</div>
+            <div class="event-meta editable" contenteditable="false">JSCBB-B115 · 6:30 PM</div>
           </div>
-          <span class="tag gold editable" contenteditable="false">New Members</span>
           <button class="remove-item admin-only" title="Remove event">×</button>
-        </div>
-        <div class="event">
-          <div class="event-date"><span class="day editable" contenteditable="false">21</span><span class="editable" contenteditable="false">SEP</span></div>
+        </div><div class="event is-past" data-date="2026-09-14">
+          <div class="event-date"><span class="day">14</span><span class="mon">SEP MON</span></div>
           <div>
-            <div class="event-title editable" contenteditable="false">Subteam Kickoff — Reaction, Mechanical, Electrical</div>
-            <div class="event-meta editable" contenteditable="false">Chem Eng Building · 6:00 PM</div>
+            <div class="event-title editable" contenteditable="false">Arduino Workshop</div>
+            <div class="event-meta editable" contenteditable="false">Come learn how to incorporate Arduino into YOUR car!!</div>
           </div>
-          <span class="tag editable" contenteditable="false">Build</span>
           <button class="remove-item admin-only" title="Remove event">×</button>
-        </div>
-        <div class="event">
-          <div class="event-date"><span class="day editable" contenteditable="false">05</span><span class="editable" contenteditable="false">OCT</span></div>
+        </div><div class="event is-past" data-date="2026-09-21">
+          <div class="event-date"><span class="day">21</span><span class="mon">SEP MON</span></div>
           <div>
-            <div class="event-title editable" contenteditable="false">Build Night</div>
-            <div class="event-meta editable" contenteditable="false">Weekly, Thursdays</div>
+            <div class="event-title editable" contenteditable="false">Reaction Workshop</div>
+            <div class="event-meta editable" contenteditable="false">How do you want to power your car??</div>
           </div>
-          <span class="tag editable" contenteditable="false">Build</span>
           <button class="remove-item admin-only" title="Remove event">×</button>
-        </div>
-        <div class="event">
-          <div class="event-date"><span class="day editable" contenteditable="false">18</span><span class="editable" contenteditable="false">OCT</span></div>
+        </div><div class="event" data-date="2026-11-08">
+          <div class="event-date"><span class="day">08</span><span class="mon">NOV SUN</span></div>
           <div>
-            <div class="event-title editable" contenteditable="false">Reaction Trial Runs</div>
-            <div class="event-meta editable" contenteditable="false">Lab TBD</div>
+            <div class="event-title editable" contenteditable="false">Chem-E-Car Competition Finals</div>
+            <div class="event-meta editable" contenteditable="false">Exhibit Hall C, Minneapolis Convention Center · Minneapolis, MN · 12:30 PM CT</div>
           </div>
-          <span class="tag reaction editable" contenteditable="false">Testing</span>
           <button class="remove-item admin-only" title="Remove event">×</button>
-        </div>
-        <div class="event">
-          <div class="event-date"><span class="day editable" contenteditable="false">08</span><span class="editable" contenteditable="false">NOV</span></div>
-          <div>
-            <div class="event-title editable" contenteditable="false">Rocky Mountain Regional Conference</div>
-            <div class="event-meta editable" contenteditable="false">Competition weekend</div>
-          </div>
-          <span class="tag gold editable" contenteditable="false">Competition</span>
-          <button class="remove-item admin-only" title="Remove event">×</button>
+        </div></div>
+          <div class="cal-empty is-hidden" id="calEmpty">Nothing scheduled this month.</div>
+          <button class="add-item-btn admin-only" id="addEvent">+ Add Event</button>
         </div>
       </div>
-      <button class="add-item-btn admin-only" id="addEvent">+ Add Event</button>
 
       <div class="cal-note editable" contenteditable="false">Follow along here for meeting times, build nights, and competition dates.</div>
     </div>
@@ -759,6 +848,7 @@
     adminBar.classList.toggle('open', on);
     adminStatus.textContent = on ? 'Editing — click text to change it' : 'Edit mode off';
     adminToggle.style.display = on ? 'none' : '';
+    if(window.calSetEditing) window.calSetEditing(on);
   }
 
   adminToggle.addEventListener('click', () => setEditing(true));
@@ -820,20 +910,187 @@
     return node;
   }
 
-  document.getElementById('addEvent').addEventListener('click', () => {
+  /* ---------- CALENDAR ----------
+     Each .event in #eventList is the source of truth (data-date, optional data-repeat="weekly" / data-until).
+     The month grid, "next up" card and date labels are all drawn from those, so Save & Publish keeps working. */
+  (function(){
     const list = document.getElementById('eventList');
-    const item = document.createElement('div');
-    item.className = 'event';
-    item.innerHTML = `
-      <div class="event-date"><span class="day editable" contenteditable="true">01</span><span class="editable" contenteditable="true">JAN</span></div>
-      <div>
-        <div class="event-title editable" contenteditable="true">New Event</div>
-        <div class="event-meta editable" contenteditable="true">Location · Time</div>
-      </div>
-      <span class="tag editable" contenteditable="true">Tag</span>
-      <button class="remove-item admin-only" title="Remove event">×</button>`;
-    list.appendChild(item);
-  });
+    const grid = document.getElementById('calGrid');
+    const monthEl = document.getElementById('calMonth');
+    const nextEl = document.getElementById('calNext');
+    const agendaTitle = document.getElementById('calAgendaTitle');
+    const clearDay = document.getElementById('calClearDay');
+    const emptyEl = document.getElementById('calEmpty');
+    const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const pad = n => String(n).padStart(2,'0');
+    const iso = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+    const parse = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; };
+    const today = new Date(); today.setHours(0,0,0,0);
+    let view = null, selected = null, isEditing = false;
+
+    function readEvents(){
+      return [...list.querySelectorAll('.event')].map(el => ({
+        el, start: parse(el.dataset.date), weekly: el.dataset.repeat === 'weekly', until: parse(el.dataset.until)
+      })).filter(e => e.start);
+    }
+    function occursOn(e, d){
+      if(d < e.start) return false;
+      if(!e.weekly) return iso(d) === iso(e.start);
+      if(e.until && d > e.until) return false;
+      return d.getDay() === e.start.getDay();
+    }
+    function nextOccurrence(e, from){
+      if(e.start >= from) return e.start;
+      if(!e.weekly) return null;
+      const d = new Date(from); d.setDate(d.getDate() + ((e.start.getDay() - d.getDay() + 7) % 7));
+      return (e.until && d > e.until) ? null : d;
+    }
+    function inMonth(e, y, m){
+      const n = new Date(y, m+1, 0).getDate();
+      for(let i = 1; i <= n; i++){ if(occursOn(e, new Date(y, m, i))) return true; }
+      return false;
+    }
+    const text = (el, sel) => { const n = el.querySelector(sel); return n ? n.textContent.trim() : ''; };
+
+    function drawDates(evts){
+      evts.forEach(e => {
+        const day = e.el.querySelector('.event-date .day'), mon = e.el.querySelector('.event-date .mon');
+        if(!day || !mon) return;
+        if(e.weekly){ day.textContent = DOW[e.start.getDay()]; mon.textContent = 'EVERY WEEK'; }
+        else { day.textContent = pad(e.start.getDate()); mon.textContent = MON[e.start.getMonth()] + ' ' + DOW[e.start.getDay()]; }
+        e.el.classList.toggle('is-past', !nextOccurrence(e, today));
+      });
+    }
+
+    function drawGrid(evts){
+      const y = view.y, m = view.m;
+      monthEl.innerHTML = '';
+      monthEl.append(MONTHS[m]); const yr = document.createElement('span'); yr.textContent = y; monthEl.append(yr);
+      grid.innerHTML = '';
+      const lead = new Date(y, m, 1).getDay(), n = new Date(y, m+1, 0).getDate();
+      for(let i = 0; i < lead; i++){ const b = document.createElement('div'); b.className = 'cal-cell blank'; grid.append(b); }
+      for(let i = 1; i <= n; i++){
+        const d = new Date(y, m, i), on = evts.filter(e => occursOn(e, d));
+        const cell = document.createElement(on.length ? 'button' : 'div');
+        cell.className = 'cal-cell' + (on.length ? ' has-events' : '') + (iso(d) === iso(today) ? ' is-today' : '') + (selected === iso(d) ? ' is-selected' : '');
+        const num = document.createElement('span'); num.textContent = i; cell.append(num);
+        const dots = document.createElement('span'); dots.className = 'cal-dots';
+        on.slice(0, 3).forEach(() => dots.append(document.createElement('i')));
+        cell.append(dots);
+        if(on.length){
+          cell.type = 'button';
+          cell.setAttribute('aria-label', MONTHS[m] + ' ' + i + ': ' + on.map(e => text(e.el, '.event-title')).join(', '));
+          cell.setAttribute('aria-pressed', selected === iso(d) ? 'true' : 'false');
+          cell.addEventListener('click', () => { selected = (selected === iso(d)) ? null : iso(d); render(); });
+        }
+        grid.append(cell);
+      }
+    }
+
+    function drawAgenda(evts){
+      const sel = parse(selected);
+      let shown = 0;
+      evts.forEach(e => {
+        const show = isEditing || (sel ? occursOn(e, sel) : inMonth(e, view.y, view.m));
+        e.el.classList.toggle('is-hidden', !show);
+        if(show) shown++;
+      });
+      if(isEditing) agendaTitle.textContent = 'All events';
+      else if(sel) agendaTitle.textContent = DAYS[sel.getDay()] + ', ' + MONTHS[sel.getMonth()] + ' ' + sel.getDate();
+      else agendaTitle.textContent = MONTHS[view.m] + ' ' + view.y;
+      clearDay.classList.toggle('is-hidden', !sel || isEditing);
+      emptyEl.classList.toggle('is-hidden', shown > 0);
+    }
+
+    function drawNext(evts){
+      let best = null;
+      evts.forEach(e => { const d = nextOccurrence(e, today); if(d && (!best || d < best.d)) best = {e, d}; });
+      nextEl.innerHTML = '';
+      if(!best){
+        const p = document.createElement('p'); p.className = 'cal-next-empty';
+        p.textContent = 'No upcoming events are posted yet. Check back soon, or contact us to find out when we meet next.';
+        nextEl.append(p); return;
+      }
+      const days = Math.round((best.d - today) / 86400000);
+      const when = document.createElement('div'); when.className = 'cal-next-when';
+      const big = document.createElement('b'); big.textContent = pad(best.d.getDate());
+      when.append(big, MON[best.d.getMonth()] + ' ' + DOW[best.d.getDay()]);
+      const body = document.createElement('div');
+      const label = document.createElement('div'); label.className = 'cal-next-label';
+      label.textContent = 'Next up ' + (days === 0 ? 'today' : days === 1 ? 'tomorrow' : 'in ' + days + ' days');
+      const title = document.createElement('div'); title.className = 'cal-next-title'; title.textContent = text(best.e.el, '.event-title');
+      const meta = document.createElement('div'); meta.className = 'cal-next-meta'; meta.textContent = text(best.e.el, '.event-meta');
+      body.append(label, title, meta);
+      const go = document.createElement('button'); go.type = 'button'; go.className = 'btn btn-outline'; go.textContent = 'Show on calendar';
+      go.addEventListener('click', () => { view = {y: best.d.getFullYear(), m: best.d.getMonth()}; selected = iso(best.d); render(); });
+      nextEl.append(when, body, go);
+    }
+
+    function addControls(el){
+      if(el.querySelector('.event-edit')) return;
+      const box = document.createElement('div'); box.className = 'event-edit';
+      box.innerHTML = '<label>Date <input type="date" class="ee-date"></label>'
+        + '<label><input type="checkbox" class="ee-weekly"> Repeats every week</label>'
+        + '<label class="ee-until-wrap">until <input type="date" class="ee-until"></label>';
+      const date = box.querySelector('.ee-date'), weekly = box.querySelector('.ee-weekly'), until = box.querySelector('.ee-until');
+      const untilWrap = box.querySelector('.ee-until-wrap');
+      date.value = el.dataset.date || ''; weekly.checked = el.dataset.repeat === 'weekly'; until.value = el.dataset.until || '';
+      untilWrap.classList.toggle('is-hidden', !weekly.checked);
+      date.addEventListener('change', () => { if(date.value){ el.dataset.date = date.value; render(); } });
+      weekly.addEventListener('change', () => {
+        if(weekly.checked) el.dataset.repeat = 'weekly'; else { delete el.dataset.repeat; delete el.dataset.until; until.value = ''; }
+        untilWrap.classList.toggle('is-hidden', !weekly.checked); render();
+      });
+      until.addEventListener('change', () => { if(until.value) el.dataset.until = until.value; else delete el.dataset.until; render(); });
+      el.append(box);
+    }
+
+    const watcher = new MutationObserver(() => render());
+    function render(){
+      watcher.disconnect();
+      const evts = readEvents();
+      if(isEditing) evts.forEach(e => addControls(e.el));
+      else {
+        list.querySelectorAll('.event-edit').forEach(n => n.remove());
+        evts.slice().sort((a, b) => (a.weekly === b.weekly ? a.start - b.start : (a.weekly ? -1 : 1))).forEach(e => list.append(e.el));
+      }
+      drawDates(evts); drawGrid(evts); drawAgenda(evts); drawNext(evts);
+      watcher.observe(list, {childList: true});
+    }
+
+    document.getElementById('calPrev').addEventListener('click', () => { view = {y: view.m === 0 ? view.y-1 : view.y, m: (view.m+11) % 12}; selected = null; render(); });
+    document.getElementById('calFwd').addEventListener('click', () => { view = {y: view.m === 11 ? view.y+1 : view.y, m: (view.m+1) % 12}; selected = null; render(); });
+    document.getElementById('calToday').addEventListener('click', () => { view = {y: today.getFullYear(), m: today.getMonth()}; selected = null; render(); });
+    clearDay.addEventListener('click', () => { selected = null; render(); });
+
+    document.getElementById('addEvent').addEventListener('click', () => {
+      const item = document.createElement('div');
+      item.className = 'event';
+      const inView = view.y === today.getFullYear() && view.m === today.getMonth();
+      item.dataset.date = selected || iso(inView ? today : new Date(view.y, view.m, 1));
+      item.innerHTML = `
+        <div class="event-date"><span class="day"></span><span class="mon"></span></div>
+        <div>
+          <div class="event-title editable" contenteditable="true">New Event</div>
+          <div class="event-meta editable" contenteditable="true">Location · Time</div>
+        </div>
+        <button class="remove-item admin-only" title="Remove event">×</button>`;
+      list.appendChild(item);
+    });
+
+    window.calSetEditing = on => { isEditing = on; if(on) selected = null; render(); };
+
+    // open on the month of the next upcoming event, or this month if nothing is coming up
+    (function(){
+      let first = null;
+      readEvents().forEach(e => { const d = nextOccurrence(e, today); if(d && (!first || d < first)) first = d; });
+      const d = first || today; view = {y: d.getFullYear(), m: d.getMonth()};
+    })();
+    render();
+  })();
 
   document.getElementById('addCheck').addEventListener('click', () => {
     const list = document.getElementById('soundsList');
@@ -893,6 +1150,10 @@
     if(cloneImgModal) cloneImgModal.classList.remove('open');
     const cloneImgInput = bodyClone.querySelector('#imgModalInput');
     if(cloneImgInput) cloneImgInput.removeAttribute('value');
+    bodyClone.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'home'));
+    bodyClone.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.page === 'home'));
+    const cloneTabs = bodyClone.querySelector('#tabs');
+    if(cloneTabs) cloneTabs.classList.remove('open');
 
     const html = '<!doctype html>\n<html lang="en">\n'
       + document.head.outerHTML + '\n'
@@ -954,23 +1215,5 @@
     }
   })();
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </body>
 </html>
